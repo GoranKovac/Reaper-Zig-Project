@@ -17,6 +17,7 @@ pub const globalVars = @import("imtest.zig");
 
 pub var globals: ?globalVars = null;
 
+// Init/deinit global vars (called from extension entrypoint)
 pub fn initVars(init: u8) void {
     if (init == 1) {
         globals = globalVars.init();
@@ -25,6 +26,7 @@ pub fn initVars(init: u8) void {
     }
 }
 
+// called from extension entrypoint
 pub fn main() !void {
     var g = &globals.?;
 

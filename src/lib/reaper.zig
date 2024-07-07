@@ -6,6 +6,7 @@ const Self = @This();
 
 /// Flag for detecting is extension on/off (terminate script if looping/crash)
 var is_looping: bool = false;
+var myCsurf: control_surface.c.C_ControlSurface = undefined;
 
 /// Extension bindings structs
 pub const extension = struct {
@@ -77,10 +78,24 @@ pub const extension = struct {
         } else {
             _ = extension.plugin_register("-timer", @constCast(@ptrCast(&onTimer)));
             main_module.initVars(0);
+            registerCsurf(false);
+            std.debug.print("VARS DEINIT\n", .{});
         }
         is_looping = set_loop;
     }
 };
+
+fn registerCsurf(init: bool) void {
+    if (init) {
+        std.debug.print("CSURF INIT\n", .{});
+        myCsurf = control_surface.init();
+        _ = extension.plugin_register("csurf_inst", myCsurf.?);
+    } else {
+        std.debug.print("CSURF DEINIT\n", .{});
+        _ = extension.plugin_register("-csurf_inst", myCsurf.?);
+        control_surface.deinit(myCsurf);
+    }
+}
 
 /// Run when extension is activated via action list or onCommand api call from Reaper
 fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw: c_int, relmode: c_int, hwnd: extension.HWND) callconv(.C) c_char {
@@ -89,9 +104,11 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
     if (command == extension.action_id) {
         switch (main_module.ExtensionCfg.loopType) {
             .loop => {
-                main_module.initVars(1);
+                if (is_looping == false) {
+                    registerCsurf(true);
+                    main_module.initVars(1);
+                }
                 extension.loop(!is_looping);
-                // if (!is_looping) extension.loop(true) else extension.loop(false);
             },
             .none => {
                 main_module.initVars(1);
@@ -128,10 +145,10 @@ export fn ReaperPluginEntry(instance: extension.HINSTANCE, rec: ?*extension.plug
     }
 
     // register csurf
-    const myCsurf = control_surface.init();
-    _ = myCsurf;
+    // const myCsurf = control_surface.init();
+    // _ = myCsurf;
     //_ = extension.plugin_register("csurf_inst", myCsurf.?);
-    std.debug.print("EXTENSION INIT?", .{});
+    std.debug.print("EXTENSION INIT\n", .{});
 
     // register extension in action list on reaper startup
     const action = extension.custom_action_register_t{ .section = 0, .id_str = main_module.ExtensionCfg.id, .name = main_module.ExtensionCfg.name };

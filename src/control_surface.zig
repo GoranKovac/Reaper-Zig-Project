@@ -1,5 +1,5 @@
 const std = @import("std");
-const c = @cImport({
+pub const c = @cImport({
     @cInclude("control_surface_wrapper.h");
 });
 
@@ -9,6 +9,10 @@ const c_void = anyopaque;
 pub fn init() c.C_ControlSurface {
     const myCsurf: c.C_ControlSurface = c.ControlSurface_Create();
     return myCsurf;
+}
+
+pub fn deinit(csurf: c.C_ControlSurface) void {
+    c.ControlSurface_Destroy(csurf);
 }
 
 fn GetTypeString() callconv(.C) [*]const u8 {
@@ -31,7 +35,7 @@ export fn zCloseNoReset() callconv(.C) void {
     std.debug.print("CloseNoReset\n", .{});
 }
 export fn zRun() callconv(.C) void {
-    std.debug.print("Run\n", .{});
+    //std.debug.print("Run\n", .{});
 }
 export fn zSetTrackListChange() callconv(.C) void {
     std.debug.print("SetTrackListChange\n", .{});
