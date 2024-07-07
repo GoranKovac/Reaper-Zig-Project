@@ -144,10 +144,6 @@ export fn ReaperPluginEntry(instance: extension.HINSTANCE, rec: ?*extension.plug
         return 0;
     }
 
-    // register csurf
-    // const myCsurf = control_surface.init();
-    // _ = myCsurf;
-    //_ = extension.plugin_register("csurf_inst", myCsurf.?);
     std.debug.print("EXTENSION INIT\n", .{});
 
     // register extension in action list on reaper startup
