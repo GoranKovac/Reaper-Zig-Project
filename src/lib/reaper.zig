@@ -2,10 +2,13 @@ const std = @import("std");
 const main_module = @import("../main.zig");
 const control_surface = @import("../control_surface.zig");
 pub usingnamespace @import("reaper_functions.zig");
+pub const ImGui = @import("reaper_imgui.zig");
+
 const Self = @This();
 
 /// Flag for detecting is extension on/off (terminate script if looping/crash)
 var is_looping: bool = false;
+var imgui_init: bool = false;
 var myCsurf: control_surface.c.C_ControlSurface = undefined;
 
 /// Extension bindings structs
@@ -77,9 +80,9 @@ pub const extension = struct {
             _ = extension.plugin_register("timer", @constCast(@ptrCast(&onTimer)));
         } else {
             _ = extension.plugin_register("-timer", @constCast(@ptrCast(&onTimer)));
-            main_module.initVars(0);
+            main_module.initVars(false);
+            std.debug.print("GLOBAL VARS DEINIT\n", .{});
             registerCsurf(false);
-            std.debug.print("VARS DEINIT\n", .{});
         }
         is_looping = set_loop;
     }
@@ -102,18 +105,27 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
     _ = .{ sec, val, val2hw, relmode, hwnd };
 
     if (command == extension.action_id) {
+        if (imgui_init == false) {
+            ImGui.init(extension.plugin_getapi) catch {
+                std.debug.print("IMGUI INIT FAILED\n", .{});
+                return 0;
+            };
+            std.debug.print("IMGUI INIT\n", .{});
+            imgui_init = true;
+        }
         switch (main_module.ExtensionCfg.loopType) {
             .loop => {
                 if (is_looping == false) {
                     registerCsurf(true);
-                    main_module.initVars(1);
+                    std.debug.print("GLOBAL VARS INIT\n", .{});
+                    main_module.initVars(true);
                 }
                 extension.loop(!is_looping);
             },
             .none => {
-                main_module.initVars(1);
+                main_module.initVars(true);
                 try main_module.main();
-                main_module.initVars(0);
+                main_module.initVars(false);
             },
         }
         return 1;
@@ -140,16 +152,14 @@ export fn ReaperPluginEntry(instance: extension.HINSTANCE, rec: ?*extension.plug
         return 0; // cleanup here
     }
     // init api functions
-    else if (!extension.init(rec.?)) {
+    if (!extension.init(rec.?)) {
         return 0;
     }
-
-    std.debug.print("EXTENSION INIT\n", .{});
-
     // register extension in action list on reaper startup
     const action = extension.custom_action_register_t{ .section = 0, .id_str = main_module.ExtensionCfg.id, .name = main_module.ExtensionCfg.name };
     extension.action_id = extension.plugin_register("custom_action", @constCast(@ptrCast(&action)));
     // Run when extension is activated via action list or onCommand api call from Reaper
     _ = extension.plugin_register("hookcommand2", @constCast(@ptrCast(&onCommand)));
+    std.debug.print("EXTENSION INIT\n", .{});
     return 1;
 }

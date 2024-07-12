@@ -9,5 +9,5 @@ click_count: u32 = 0,
 text: [255:0]u8 = std.mem.zeroes([255:0]u8),
 
 pub fn init() Self {
-    return Self{};
+    return Self{ .ctx = ImGui.CreateContext(.{"My First Ziggy"}) catch null };
 }
