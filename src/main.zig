@@ -4,7 +4,7 @@ comptime {
     _ = @import("lib/reaper.zig");
 }
 const std = @import("std");
-pub const reaper = @import("lib/reaper.zig");
+const reaper = @import("lib/reaper.zig");
 const ImGui = reaper.ImGui;
 
 pub const ExtensionCfg = struct {
