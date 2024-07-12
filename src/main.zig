@@ -13,7 +13,7 @@ pub const ExtensionCfg = struct {
     pub const loopType: reaper.extension.loopType = .loop;
 };
 
-pub const globalVars = @import("imtest.zig");
+pub const globalVars = @import("imgui_vars_test.zig");
 
 pub var globals: ?globalVars = null;
 
