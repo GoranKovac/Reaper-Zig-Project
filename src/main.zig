@@ -1,11 +1,11 @@
 // zig build-lib -dynamic -O ReleaseFast -femit-bin=reaper_zig.so
-// preload reaper.zig so it can register ReaperEntryPoint and call main() from there
-comptime {
-    _ = @import("lib/reaper.zig");
-}
 const std = @import("std");
 const reaper = @import("lib/reaper.zig");
 const ImGui = reaper.ImGui;
+// preload reaper.zig so it can register ReaperEntryPoint and call main() from there
+comptime {
+    _ = reaper;
+}
 
 pub const ExtensionCfg = struct {
     pub const id: [*:0]const u8 = "ZIGGY_12345";
