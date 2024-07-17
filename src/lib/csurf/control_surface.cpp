@@ -2,7 +2,7 @@
 
 extern "C" {
 void zCloseNoReset();
-void zRun();
+// void zRun();
 void zSetTrackListChange();
 void zSetSurfaceVolume(MediaTrack *trackid, double volume);
 void zSetSurfacePan(MediaTrack *trackid, double pan);
@@ -28,7 +28,7 @@ const char *ZigControlSurface::GetDescString() { return ""; }
 const char *ZigControlSurface::GetConfigString() { return ""; }
 
 void ZigControlSurface::CloseNoReset() { zCloseNoReset(); }
-void ZigControlSurface::Run() { zRun(); }
+// void ZigControlSurface::Run() { zRun(); }
 void ZigControlSurface::SetTrackListChange() { zSetTrackListChange(); }
 void ZigControlSurface::SetSurfaceVolume(MediaTrack *trackid, double volume) {
   zSetSurfaceVolume(trackid, volume);

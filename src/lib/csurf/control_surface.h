@@ -8,7 +8,7 @@
 // extern "C" const char *zGetDescString();
 // extern "C" const char *zGetConfigString();
 extern "C" void zCloseNoReset();
-extern "C" void zRun();
+// extern "C" void zRun();
 extern "C" void zSetTrackListChange();
 extern "C" void zSetSurfaceVolume(MediaTrack *trackid, double volume);
 extern "C" void zSetSurfacePan(MediaTrack *trackid, double pan);
@@ -34,7 +34,7 @@ public:
   const char *GetConfigString() override;
 
   void CloseNoReset() override;
-  void Run() override;
+  // void Run() override;
   void SetTrackListChange() override;
   void SetSurfaceVolume(MediaTrack *trackid, double volume) override;
   void SetSurfacePan(MediaTrack *trackid, double pan) override;

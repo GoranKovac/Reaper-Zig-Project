@@ -34,9 +34,9 @@ export const zGetConfigString = &GetConfigString;
 export fn zCloseNoReset() callconv(.C) void {
     std.debug.print("CloseNoReset\n", .{});
 }
-export fn zRun() callconv(.C) void {
-    //std.debug.print("Run\n", .{});
-}
+// export fn zRun() callconv(.C) void {
+//     //std.debug.print("Run\n", .{});
+// }
 export fn zSetTrackListChange() callconv(.C) void {
     std.debug.print("SetTrackListChange\n", .{});
 }
