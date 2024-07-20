@@ -18,9 +18,9 @@ pub const globalVars = @import("imgui_vars_test.zig");
 pub var globals: ?globalVars = null;
 
 // Init/deinit global vars (called from extension entrypoint)
-pub fn initVars(init: bool) void {
+pub fn initVars(init: bool) !void {
     if (init) {
-        globals = globalVars.init();
+        globals = try globalVars.init();
     } else {
         globals = null;
     }
@@ -47,6 +47,6 @@ pub fn main() !void {
     }
 
     if (!open) {
-        reaper.extension.loop(false);
+        try reaper.extension.loop(false);
     }
 }

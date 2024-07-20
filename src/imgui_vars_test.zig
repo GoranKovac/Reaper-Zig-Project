@@ -8,6 +8,7 @@ ctx: ImGui.ContextPtr = null,
 click_count: u32 = 0,
 text: [255:0]u8 = std.mem.zeroes([255:0]u8),
 
-pub fn init() Self {
-    return Self{ .ctx = ImGui.CreateContext(.{"My First Ziggy"}) catch null };
+pub fn init() !Self {
+    const globals = Self{ .ctx = try ImGui.CreateContext(.{"My First Ziggy"}) };
+    return globals;
 }

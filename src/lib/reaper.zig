@@ -75,12 +75,12 @@ pub const extension = struct {
     const init = initFunctions;
 
     /// Initialize loop (timer) - Start/Stop
-    pub fn loop(set_loop: bool) void {
+    pub fn loop(set_loop: bool) !void {
         if (set_loop) {
             _ = extension.plugin_register("timer", @constCast(@ptrCast(&onTimer)));
         } else {
             _ = extension.plugin_register("-timer", @constCast(@ptrCast(&onTimer)));
-            main_module.initVars(false);
+            try main_module.initVars(false);
             std.debug.print("GLOBAL VARS DEINIT\n", .{});
             registerCsurf(false);
         }
@@ -118,9 +118,15 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
                 if (is_looping == false) {
                     registerCsurf(true);
                     std.debug.print("GLOBAL VARS INIT\n", .{});
-                    main_module.initVars(true);
+                    main_module.initVars(true) catch {
+                        std.debug.print("GLOBAL VARS INIT FAILED\n", .{});
+                        return 0;
+                    };
                 }
-                extension.loop(!is_looping);
+                extension.loop(!is_looping) catch {
+                    std.debug.print("GLOBAL VARS INIT FAILED\n", .{});
+                    return 0;
+                };
             },
             .none => {
                 main_module.initVars(true);
@@ -137,7 +143,9 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
 fn onTimer() callconv(.C) void {
     main_module.main() catch //{
     // stop on error
-        extension.loop(false);
+        extension.loop(false) catch {
+        std.debug.print("FAILED TO DEINIT VARS\n", .{});
+    };
     // if (main_module.ExtensionCfg.loopType == .imgui) {
     //     // extension.ShowMessageBox(main_module.ImGui.last_error.?, main_module.ExtensionCfg.name, 0);
     // }
