@@ -10,7 +10,6 @@ comptime {
 pub const ExtensionCfg = struct {
     pub const id: [*:0]const u8 = "ZIGGY_12345";
     pub const name: [*:0]const u8 = "Zig TEST";
-    pub const loopType: reaper.extension.loopType = .loop;
 };
 
 pub const globalVars = @import("imgui_vars_test.zig");

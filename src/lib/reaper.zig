@@ -16,12 +16,6 @@ pub const extension = struct {
     // add all reaper function pointers here
     pub usingnamespace Self.fnPtrs;
 
-    /// Set the loop type of extension
-    pub const loopType = enum {
-        loop,
-        none,
-    };
-
     // Action_id for registrating extension
     pub var action_id: c_int = undefined;
     pub const PLUGIN_VERSION = 0x20E;
@@ -105,6 +99,7 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
     _ = .{ sec, val, val2hw, relmode, hwnd };
 
     if (command == extension.action_id) {
+        // init imgui
         if (imgui_init == false) {
             ImGui.init(extension.plugin_getapi) catch {
                 std.debug.print("IMGUI INIT FAILED\n", .{});
@@ -113,27 +108,19 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
             std.debug.print("IMGUI INIT\n", .{});
             imgui_init = true;
         }
-        switch (main_module.ExtensionCfg.loopType) {
-            .loop => {
-                if (is_looping == false) {
-                    registerCsurf(true);
-                    std.debug.print("GLOBAL VARS INIT\n", .{});
-                    main_module.initVars(true) catch {
-                        std.debug.print("GLOBAL VARS INIT FAILED\n", .{});
-                        return 0;
-                    };
-                }
-                extension.loop(!is_looping) catch {
-                    std.debug.print("GLOBAL VARS INIT FAILED\n", .{});
-                    return 0;
-                };
-            },
-            .none => {
-                main_module.initVars(true);
-                try main_module.main();
-                main_module.initVars(false);
-            },
+        // init csurf, global variables
+        if (is_looping == false) {
+            registerCsurf(true);
+            std.debug.print("GLOBAL VARS INIT\n", .{});
+            main_module.initVars(true) catch {
+                std.debug.print("GLOBAL VARS INIT FAILED\n", .{});
+                return 0;
+            };
         }
+        extension.loop(!is_looping) catch {
+            std.debug.print("GLOBAL VARS DEINIT FAILED\n", .{});
+            return 0;
+        };
         return 1;
     }
     return 0;
@@ -141,15 +128,12 @@ fn onCommand(sec: *extension.KbdSectionInfo, command: c_int, val: c_int, val2hw:
 
 /// Call function on timer interval (Reaper 33hz)
 fn onTimer() callconv(.C) void {
-    main_module.main() catch //{
-    // stop on error
+    main_module.main() catch {
+        // stop on error
         extension.loop(false) catch {
-        std.debug.print("FAILED TO DEINIT VARS\n", .{});
+            std.debug.print("FAILED TO DEINIT VARS\n", .{});
+        };
     };
-    // if (main_module.ExtensionCfg.loopType == .imgui) {
-    //     // extension.ShowMessageBox(main_module.ImGui.last_error.?, main_module.ExtensionCfg.name, 0);
-    // }
-    //};
 }
 
 /// Reaper entry point init (called by reaper)
