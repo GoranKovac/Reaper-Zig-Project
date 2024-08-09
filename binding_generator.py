@@ -37,6 +37,7 @@ def handle_comments(comment):
     return comment
 
 def handle_return(ret_arg_string):
+    # print(ret_arg_string)
     #remove everything between parentheses. Clang AST returns return and arguments together - bool *(*)(int double char*)
     r_type = re.sub("[\(\[].*?[\)\]]", "", ret_arg_string)
     is_pointer = True if r_type.find("*") > -1 else None
@@ -44,14 +45,22 @@ def handle_return(ret_arg_string):
     stripped_type = r_type.replace("*", "").strip()
     is_char = True if stripped_type.find("char") > -1 else None
     #if not zig/c type create new opaque
-    add_reaper_type(stripped_type)
+    is_reaper = add_reaper_type(stripped_type)
     #convert to zig type
-    if stripped_type != 'void' and stripped_type in zig_types:
-        r_type = zig_types[stripped_type]
-        #(C pointers are on right side -> int*) we need to move it to left fot ZIG
-        #pointer returns can return Null so make it optional
-        if is_pointer and not is_char:
-            r_type = '?*' + r_type
+    if stripped_type != 'void':
+        if stripped_type in zig_types:
+            r_type = zig_types[stripped_type]
+            #(C pointers are on right side -> int*) we need to move it to left fot ZIG
+            #pointer returns can return Null so make it optional
+            if is_pointer and not is_char:
+                r_type = '?*' + r_type
+        else:
+            if is_pointer:
+                if is_reaper:
+                    r_type = '?' + stripped_type
+                else:
+                    r_type = '?*' + stripped_type
+            # print(r_type)
     else:
         #if pointer void convert to anyopaque and optional
         if is_pointer:
@@ -63,25 +72,36 @@ def handle_parms(p_type):
     stripped_type = p_type.replace("*", "").strip()
     is_char = True if stripped_type.find("char") > -1 else None
     #if not zig/c type create new opaque
-    add_reaper_type(stripped_type)
+    is_reaper = add_reaper_type(stripped_type)
+    if is_reaper:
+        stripped_type = stripped_type.replace("const ", "").strip()
+        # if stripped_type == "const GUID":
+            # stripped_type = "GUID"
+        # if stripped_type == "GUID":
     #convert to zig type
     if stripped_type in zig_types:
         stripped_type = zig_types[stripped_type]
     if is_pointer and not is_char:
+        if is_reaper:
+            stripped_type = '?' + stripped_type
+        else:
+            stripped_type = '?*' + stripped_type
         #(C pointers are on right side -> int*) we need to move it to left fot ZIG
-        stripped_type = '*' + stripped_type
     return stripped_type
 
 def add_reaper_type(stripped_type):
     global zig_opaques
+    is_reaper = None
     #remove const keyword
     stripped_type = stripped_type.replace("const ", "").strip()
     #if type is not found in zig_types then its reaper type, create opaque
     if not stripped_type in zig_types:
+        is_reaper = True
         #keep track of inserted type
         if not stripped_type in reaper_types:
             reaper_types.append(stripped_type)
-            zig_opaques.append('const ' + stripped_type + ' = *opaque {};')
+            zig_opaques.append('pub const ' + stripped_type + ' = *opaque {};')
+    return is_reaper
 
 def walk_parm(node, param_ptr_array, param_fn_array):
     if node.kind == clang.cindex.CursorKind.PARM_DECL:        
@@ -116,7 +136,7 @@ def walk_fn(node):
         start = True
     #check if line is function
     if node.kind == clang.cindex.CursorKind.VAR_DECL and start:
-        print(node.spelling or node.displayname)
+        # print(node.spelling or node.displayname)
         #ignore __mergesort, we will hardcode it since its complicated
         is_func = True if (node.spelling or node.displayname) != "__mergesort" else None
         #store mergesort comment since we need to insert it later
