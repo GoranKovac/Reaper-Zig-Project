@@ -103,10 +103,7 @@ export fn zResetCachedVolPanStates() callconv(.C) void {
     std.debug.print("ResetCachedVolPanStates\n", .{});
 }
 export fn zOnTrackSelection(trackid: r.MediaTrack) callconv(.C) void {
-    // _ = trackid;
-    std.debug.print("OnTrackSelection --------------------------------------\n", .{});
-    main_module.getFxData(trackid);
-    std.debug.print("-------------------------------------------------------\n", .{});
+    _ = trackid;
 }
 export fn zIsKeyDown(key: c_int) callconv(.C) bool {
     _ = key;
@@ -114,7 +111,7 @@ export fn zIsKeyDown(key: c_int) callconv(.C) bool {
     return false;
 }
 export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_void) callconv(.C) c_int {
-    //_ = parm1;
+    _ = parm1;
     _ = parm2;
     _ = parm3;
     std.debug.print("Extended\n", .{});
@@ -138,11 +135,7 @@ export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_vo
         0x00010010 => std.debug.print("\tCSURF_EXT_SETRECVVOLUME\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)volume
         0x00010011 => std.debug.print("\tCSURF_EXT_SETRECVPAN\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)pan
         0x00010012 => std.debug.print("\tCSURF_EXT_SETFXOPEN\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if UI closed, !0 if open
-        0x00010013 => {
-            std.debug.print("\tCSURF_EXT_SETFXCHANGE ---------------------------\n", .{});
-            main_module.getFxData(@ptrCast(parm1));
-            std.debug.print("\t-------------------------------------------------\n", .{});
-        }, // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order. flags=(INT_PTR)parm2, &1=rec fx
+        0x00010013 => std.debug.print("\tCSURF_EXT_SETFXCHANGE\n", .{}),
         0x00010014 => std.debug.print("\tCSURF_EXT_SETPROJECTMARKERCHANGE\n", .{}), // whenever project markers are changed
         0x00010015 => std.debug.print("\tCSURF_EXT_TRACKFX_PRESET_CHANGED\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)fxidx (6.13+ probably)
         0x00080001 => std.debug.print("\tCSURF_EXT_SUPPORTS_EXTENDED_TOUCH\n", .{}), // returns nonzero if GetTouchState can take isPan=2 for width, etc
