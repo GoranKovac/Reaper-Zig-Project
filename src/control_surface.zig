@@ -1,9 +1,13 @@
 const std = @import("std");
+const main_module = @import("main.zig");
+const fx = @import("track/fx.zig");
+const r = @import("lib/reaper.zig");
+
 pub const c = @cImport({
     @cInclude("control_surface_wrapper.h");
 });
 
-const MediaTrack = *opaque {};
+//const MediaTrack = *opaque {};
 const c_void = anyopaque;
 
 pub fn init() c.C_ControlSurface {
@@ -40,32 +44,32 @@ export fn zCloseNoReset() callconv(.C) void {
 export fn zSetTrackListChange() callconv(.C) void {
     std.debug.print("SetTrackListChange\n", .{});
 }
-export fn zSetSurfaceVolume(trackid: *MediaTrack, volume: f64) callconv(.C) void {
+export fn zSetSurfaceVolume(trackid: r.MediaTrack, volume: f64) callconv(.C) void {
     _ = trackid;
     _ = volume;
     std.debug.print("SetSurfaceVolume\n", .{});
 }
-export fn zSetSurfacePan(trackid: *MediaTrack, pan: f64) callconv(.C) void {
+export fn zSetSurfacePan(trackid: r.MediaTrack, pan: f64) callconv(.C) void {
     _ = trackid;
     _ = pan;
     std.debug.print("SetSurfacePan\n", .{});
 }
-export fn zSetSurfaceMute(trackid: *MediaTrack, mute: bool) callconv(.C) void {
+export fn zSetSurfaceMute(trackid: r.MediaTrack, mute: bool) callconv(.C) void {
     _ = trackid;
     _ = mute;
     std.debug.print("SetSurfaceMute\n", .{});
 }
-export fn zSetSurfaceSelected(trackid: *MediaTrack, selected: bool) callconv(.C) void {
+export fn zSetSurfaceSelected(trackid: r.MediaTrack, selected: bool) callconv(.C) void {
     _ = trackid;
     _ = selected;
     std.debug.print("SetSurfaceSelected\n", .{});
 }
-export fn zSetSurfaceSolo(trackid: *MediaTrack, solo: bool) callconv(.C) void {
+export fn zSetSurfaceSolo(trackid: r.MediaTrack, solo: bool) callconv(.C) void {
     _ = trackid;
     _ = solo;
     std.debug.print("SetSurfaceSolo\n", .{});
 }
-export fn zSetSurfaceRecArm(trackid: *MediaTrack, recarm: bool) callconv(.C) void {
+export fn zSetSurfaceRecArm(trackid: r.MediaTrack, recarm: bool) callconv(.C) void {
     _ = trackid;
     _ = recarm;
     std.debug.print("SetSurfaceRecArm\n", .{});
@@ -80,12 +84,12 @@ export fn zSetRepeatState(rep: bool) callconv(.C) void {
     _ = rep;
     std.debug.print("SetRepeatState\n", .{});
 }
-export fn zSetTrackTitle(trackid: *MediaTrack, title: [*]const u8) callconv(.C) void {
+export fn zSetTrackTitle(trackid: r.MediaTrack, title: [*]const u8) callconv(.C) void {
     _ = trackid;
     _ = title;
     std.debug.print("SetTrackTitle\n", .{});
 }
-export fn zGetTouchState(trackid: *MediaTrack, isPan: c_int) callconv(.C) bool {
+export fn zGetTouchState(trackid: r.MediaTrack, isPan: c_int) callconv(.C) bool {
     _ = trackid;
     _ = isPan;
     std.debug.print("GetTouchState\n", .{});
@@ -98,9 +102,11 @@ export fn zSetAutoMode(mode: c_int) callconv(.C) void {
 export fn zResetCachedVolPanStates() callconv(.C) void {
     std.debug.print("ResetCachedVolPanStates\n", .{});
 }
-export fn zOnTrackSelection(trackid: *MediaTrack) callconv(.C) void {
-    _ = trackid;
-    std.debug.print("OnTrackSelection\n", .{});
+export fn zOnTrackSelection(trackid: r.MediaTrack) callconv(.C) void {
+    // _ = trackid;
+    std.debug.print("OnTrackSelection --------------------------------------\n", .{});
+    main_module.getFxData(trackid);
+    std.debug.print("-------------------------------------------------------\n", .{});
 }
 export fn zIsKeyDown(key: c_int) callconv(.C) bool {
     _ = key;
@@ -108,7 +114,7 @@ export fn zIsKeyDown(key: c_int) callconv(.C) bool {
     return false;
 }
 export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_void) callconv(.C) c_int {
-    _ = parm1;
+    //_ = parm1;
     _ = parm2;
     _ = parm3;
     std.debug.print("Extended\n", .{});
@@ -132,7 +138,11 @@ export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_vo
         0x00010010 => std.debug.print("\tCSURF_EXT_SETRECVVOLUME\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)volume
         0x00010011 => std.debug.print("\tCSURF_EXT_SETRECVPAN\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)recvidx, parm3=(double*)pan
         0x00010012 => std.debug.print("\tCSURF_EXT_SETFXOPEN\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)fxidx, parm3=0 if UI closed, !0 if open
-        0x00010013 => std.debug.print("\tCSURF_EXT_SETFXCHANGE\n", .{}), // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order. flags=(INT_PTR)parm2, &1=rec fx
+        0x00010013 => {
+            std.debug.print("\tCSURF_EXT_SETFXCHANGE ---------------------------\n", .{});
+            main_module.getFxData(@ptrCast(parm1));
+            std.debug.print("\t-------------------------------------------------\n", .{});
+        }, // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order. flags=(INT_PTR)parm2, &1=rec fx
         0x00010014 => std.debug.print("\tCSURF_EXT_SETPROJECTMARKERCHANGE\n", .{}), // whenever project markers are changed
         0x00010015 => std.debug.print("\tCSURF_EXT_TRACKFX_PRESET_CHANGED\n", .{}), // parm1=(MediaTrack*)track, parm2=(int*)fxidx (6.13+ probably)
         0x00080001 => std.debug.print("\tCSURF_EXT_SUPPORTS_EXTENDED_TOUCH\n", .{}), // returns nonzero if GetTouchState can take isPan=2 for width, etc

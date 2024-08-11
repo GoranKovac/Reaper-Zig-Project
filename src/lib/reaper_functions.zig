@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const MediaTrack = *opaque {};
 pub const MediaItem = *opaque {};
 pub const ReaProject = *opaque {};
@@ -40,6 +42,32 @@ pub const IReaperPitchShift = *opaque {};
 pub const REAPER_Resample_Interface = *opaque {};
 pub const screensetNewCallbackFunc = *opaque {};
 pub const WDL_VirtualWnd_BGCfg = *opaque {};
+
+pub fn CString(size: usize) type {
+    return struct {
+        buf: [size]u8,
+
+        pub fn len(self: @This()) c_int {
+            return self.buf.len;
+        }
+
+        pub fn ptr(self: *@This()) [*:0]u8 {
+            return @ptrCast(&self.buf);
+        }
+
+        pub fn cptr(self: *const @This()) [*:0]const u8 {
+            return @ptrCast(&self.buf);
+        }
+
+        pub fn span(self: *@This()) @TypeOf(std.mem.span(self.ptr())) {
+            return std.mem.span(self.ptr());
+        }
+
+        pub fn cspan(self: *const @This()) @TypeOf(std.mem.span(self.cptr())) {
+            return std.mem.span(self.cptr());
+        }
+    };
+}
 
 pub const fnPtrs = struct {
     pub var __mergesort: *fn (base: ?*anyopaque, nmemb: usize, size: usize, cmpfunc: ?*fn (*const anyopaque, *const anyopaque) callconv(.C) c_int, tmpspace: ?*anyopaque) callconv(.C) void = undefined;
