@@ -1,22 +1,49 @@
 pub const std = @import("std");
 pub const r = @import("../lib/reaper.zig");
 
+var gpa: std.heap.GeneralPurposeAllocator(.{}) = undefined;
+var allocator: std.mem.Allocator = undefined;
+pub var map: FxMap = undefined;
+
+/// Initialize Gpa & map
+pub fn gpaMapInit() void {
+    gpa = @TypeOf(gpa){};
+    allocator = gpa.allocator();
+    map = FxMap.init();
+}
+
+/// DeInitialize Gpa & map
+pub fn gpaMapDeinit() void {
+    map.deinit();
+    _ = gpa.deinit();
+}
+
+/// Map struct that holds all track fx
 pub const FxMap = struct {
     map: std.AutoArrayHashMap(c_int, FxData),
 
-    pub fn init(allocator: std.mem.Allocator) FxMap {
-        return .{ .map = std.AutoArrayHashMap(c_int, FxData).init(allocator) };
+    pub fn init() FxMap {
+        return .{
+            .map = std.AutoArrayHashMap(c_int, FxData).init(allocator),
+        };
     }
 
     pub fn deinit(self: *FxMap) void {
         self.map.deinit();
     }
 
-    pub fn clearRetainingCapacity(self: *FxMap) void {
-        self.map.clearRetainingCapacity();
+    pub fn refresh(self: *FxMap) void {
+        if (self.map.keys().len > 0) {
+            self.map.clearRetainingCapacity();
+        }
+    }
+
+    pub fn iter(self: *FxMap) @TypeOf(self.map.iterator()) {
+        return self.map.iterator();
     }
 };
 
+/// FX Data struct
 pub const FxData = struct {
     name: r.CString(255) = undefined,
     fx_id: c_int = undefined,
@@ -28,6 +55,7 @@ pub const FxData = struct {
     type: r.CString(255) = undefined,
     guid: r.GUID = undefined,
 
+    /// Create FX struct from fx data
     fn get(track: r.MediaTrack, fx_id: c_int) !?FxData {
         var data: FxData = FxData{};
         // if this one fail others will also
@@ -56,6 +84,7 @@ pub const FxData = struct {
     }
 };
 
+/// Iterate container fx (recursive for nested containers)
 fn iterateContFx(track: r.MediaTrack, container_cnt: usize, fx_id: c_int, fx_list: *FxMap) !void {
     for (0..container_cnt) |i| {
         var buf_cont_item: [255:0]u8 = undefined;
@@ -75,8 +104,8 @@ fn iterateContFx(track: r.MediaTrack, container_cnt: usize, fx_id: c_int, fx_lis
                     var cont_fx_cnt: r.CString(255) = undefined;
                     const rv_cont_fx_cnt: bool = r.TrackFX_GetNamedConfigParm(track, cont_fx_id, "container_count", cont_fx_cnt.ptr(), cont_fx_cnt.len());
                     if (rv_cont_fx_cnt) {
-                        //const cont_cnt_usize: usize = try std.fmt.parseUnsigned(usize, cont_fx_cnt.span(), 10);
-                        //try iterateContFx(track, cont_cnt_usize, cont_fx_id, fx_list);
+                        const cont_cnt_usize: usize = try std.fmt.parseUnsigned(usize, cont_fx_cnt.span(), 10);
+                        try iterateContFx(track, cont_cnt_usize, cont_fx_id, fx_list);
                     }
                 }
             }
@@ -84,8 +113,8 @@ fn iterateContFx(track: r.MediaTrack, container_cnt: usize, fx_id: c_int, fx_lis
     }
 }
 
+/// Iterate track fx (root level only)
 pub fn iterTrackFx(track: r.MediaTrack, fx_list: *FxMap) !void {
-    //var fx_list = FxMap.init(allocator);
     const cnt: usize = @intCast(r.TrackFX_GetCount(track));
     for (0..cnt) |i| {
         const fx_id: c_int = @intCast(i);
@@ -103,5 +132,18 @@ pub fn iterTrackFx(track: r.MediaTrack, fx_list: *FxMap) !void {
             }
         }
     }
-    //return fx_list;
+}
+
+/// Get all track fx and insert into map
+/// Should be called only from csurf
+pub fn getFxData(track: r.MediaTrack) void {
+    map.refresh();
+    iterTrackFx(track, &map) catch {
+        std.debug.print("UNABLE TO ITERATE TRACK FX\n", .{});
+    };
+    std.debug.print("FX REFRESHED\n", .{});
+    // var iterator = map.iter();
+    // while (iterator.next()) |entry| {
+    //     std.debug.print("FX ID {d}  NAME {s}\n", .{ entry.key_ptr.*, entry.value_ptr.name.buf });
+    // }
 }
