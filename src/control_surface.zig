@@ -1,7 +1,6 @@
 const std = @import("std");
 const main_module = @import("main.zig");
-const fx = @import("track/fx.zig");
-const r = @import("lib/reaper.zig");
+const r = @import("lib/reaper_functions.zig");
 
 pub const c = @cImport({
     @cInclude("control_surface_wrapper.h");
@@ -19,15 +18,15 @@ pub fn deinit(csurf: c.C_ControlSurface) void {
     c.ControlSurface_Destroy(csurf);
 }
 
-fn GetTypeString() callconv(.C) [*]const u8 {
+fn GetTypeString() callconv(.c) [*]const u8 {
     return "";
 }
 
-fn GetDescString() callconv(.C) [*]const u8 {
+fn GetDescString() callconv(.c) [*]const u8 {
     return "";
 }
 
-fn GetConfigString() callconv(.C) [*]const u8 {
+fn GetConfigString() callconv(.c) [*]const u8 {
     return "";
 }
 
@@ -35,82 +34,82 @@ export const zGetTypeString = &GetTypeString;
 export const zGetDescString = &GetDescString;
 export const zGetConfigString = &GetConfigString;
 
-export fn zCloseNoReset() callconv(.C) void {
+export fn zCloseNoReset() callconv(.c) void {
     std.debug.print("CloseNoReset\n", .{});
 }
 // export fn zRun() callconv(.C) void {
 //     //std.debug.print("Run\n", .{});
 // }
-export fn zSetTrackListChange() callconv(.C) void {
+export fn zSetTrackListChange() callconv(.c) void {
     std.debug.print("SetTrackListChange\n", .{});
 }
-export fn zSetSurfaceVolume(trackid: r.MediaTrack, volume: f64) callconv(.C) void {
+export fn zSetSurfaceVolume(trackid: r.MediaTrack, volume: f64) callconv(.c) void {
     _ = trackid;
     _ = volume;
     std.debug.print("SetSurfaceVolume\n", .{});
 }
-export fn zSetSurfacePan(trackid: r.MediaTrack, pan: f64) callconv(.C) void {
+export fn zSetSurfacePan(trackid: r.MediaTrack, pan: f64) callconv(.c) void {
     _ = trackid;
     _ = pan;
     std.debug.print("SetSurfacePan\n", .{});
 }
-export fn zSetSurfaceMute(trackid: r.MediaTrack, mute: bool) callconv(.C) void {
+export fn zSetSurfaceMute(trackid: r.MediaTrack, mute: bool) callconv(.c) void {
     _ = trackid;
     _ = mute;
     std.debug.print("SetSurfaceMute\n", .{});
 }
-export fn zSetSurfaceSelected(trackid: r.MediaTrack, selected: bool) callconv(.C) void {
+export fn zSetSurfaceSelected(trackid: r.MediaTrack, selected: bool) callconv(.c) void {
     _ = trackid;
     _ = selected;
     std.debug.print("SetSurfaceSelected\n", .{});
 }
-export fn zSetSurfaceSolo(trackid: r.MediaTrack, solo: bool) callconv(.C) void {
+export fn zSetSurfaceSolo(trackid: r.MediaTrack, solo: bool) callconv(.c) void {
     _ = trackid;
     _ = solo;
     std.debug.print("SetSurfaceSolo\n", .{});
 }
-export fn zSetSurfaceRecArm(trackid: r.MediaTrack, recarm: bool) callconv(.C) void {
+export fn zSetSurfaceRecArm(trackid: r.MediaTrack, recarm: bool) callconv(.c) void {
     _ = trackid;
     _ = recarm;
     std.debug.print("SetSurfaceRecArm\n", .{});
 }
-export fn zSetPlayState(play: bool, pause: bool, rec: bool) callconv(.C) void {
+export fn zSetPlayState(play: bool, pause: bool, rec: bool) callconv(.c) void {
     _ = play;
     _ = pause;
     _ = rec;
     std.debug.print("SetPlayState\n", .{});
 }
-export fn zSetRepeatState(rep: bool) callconv(.C) void {
+export fn zSetRepeatState(rep: bool) callconv(.c) void {
     _ = rep;
     std.debug.print("SetRepeatState\n", .{});
 }
-export fn zSetTrackTitle(trackid: r.MediaTrack, title: [*]const u8) callconv(.C) void {
+export fn zSetTrackTitle(trackid: r.MediaTrack, title: [*]const u8) callconv(.c) void {
     _ = trackid;
     _ = title;
     std.debug.print("SetTrackTitle\n", .{});
 }
-export fn zGetTouchState(trackid: r.MediaTrack, isPan: c_int) callconv(.C) bool {
+export fn zGetTouchState(trackid: r.MediaTrack, isPan: c_int) callconv(.c) bool {
     _ = trackid;
     _ = isPan;
     std.debug.print("GetTouchState\n", .{});
     return false;
 }
-export fn zSetAutoMode(mode: c_int) callconv(.C) void {
+export fn zSetAutoMode(mode: c_int) callconv(.c) void {
     _ = mode;
     std.debug.print("SetAutoMode\n", .{});
 }
-export fn zResetCachedVolPanStates() callconv(.C) void {
+export fn zResetCachedVolPanStates() callconv(.c) void {
     std.debug.print("ResetCachedVolPanStates\n", .{});
 }
-export fn zOnTrackSelection(trackid: r.MediaTrack) callconv(.C) void {
+export fn zOnTrackSelection(trackid: r.MediaTrack) callconv(.c) void {
     _ = trackid;
 }
-export fn zIsKeyDown(key: c_int) callconv(.C) bool {
+export fn zIsKeyDown(key: c_int) callconv(.c) bool {
     _ = key;
-    std.debug.print("IsKeyDown\n", .{});
+    // std.debug.print("IsKeyDown{}\n", .{key});
     return false;
 }
-export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_void) callconv(.C) c_int {
+export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_void) callconv(.c) c_int {
     _ = parm1;
     _ = parm2;
     _ = parm3;
@@ -144,3 +143,4 @@ export fn zExtended(call: c_int, parm1: ?*c_void, parm2: ?*c_void, parm3: ?*c_vo
     }
     return 0;
 }
+
