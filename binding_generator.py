@@ -32,6 +32,8 @@ start = None
 def handle_comments(comment):
     #there are some invalid characters in header
     comment = comment.replace('','')
+    #zig 0.15 has not tabs anymore in comments
+    comment = comment.replace('\t','')
     #add one more forward slash for zig documentation
     comment = '/'.join(('\n' + comment).splitlines(True))
     return comment
