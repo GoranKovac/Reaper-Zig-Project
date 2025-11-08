@@ -161,7 +161,7 @@ def walk_fn(node):
         zig_comment = handle_comments(comment_str)
         
         #finish function pointer string
-        fn_ptr_str = fn_ptr_str + ptr_args + ') ' + 'callconv(.C) ' + fn_return_type + ' = undefined;'
+        fn_ptr_str = fn_ptr_str + ptr_args + ') ' + 'callconv(.c) ' + fn_return_type + ' = undefined;'
         #finish function wrapper string
         fn_str = fn_str + ptr_args + ') ' + fn_return_type + ' {\n' + '\treturn fnPtrs.' + (node.spelling or node.displayname) + '(' + fn_args + ');\n}'
         
@@ -177,7 +177,7 @@ print(h_path)
 index = clang.cindex.Index.create()
 walk_fn(index.parse(h_path + 'reaper_plugin_functions.h', args='-x c++ -lc++ -std=c++14 -fsyntax-only -fparse-all-comments'.split()).cursor)
 #hardcode __mergesort
-zig_fnPtrs.insert(0,'\tpub var __mergesort: *fn (base: ?*anyopaque,  nmemb: usize, size: usize, cmpfunc: ?*fn(*const anyopaque, *const anyopaque) callconv(.C) c_int, tmpspace: ?*anyopaque) callconv(.C) void = undefined;')
+zig_fnPtrs.insert(0,'\tpub var __mergesort: *fn (base: ?*anyopaque,  nmemb: usize, size: usize, cmpfunc: ?*fn(*const anyopaque, *const anyopaque) callconv(.c) c_int, tmpspace: ?*anyopaque) callconv(.c) void = undefined;')
 zig_functions.insert(0,'pub fn __mergesort(base: ?*anyopaque,  nmemb: usize, size: usize, cmpfunc: ?*fn(*const anyopaque, *const anyopaque) c_int, tmpspace: ?*anyopaque) void {\n\treturn fnPtrs.__mergesort(base,  nmemb, size, cmpfunc, tmpspace);\n}')
 zig_functions.insert(0, '\n' + mergesort_comment)
 #create final string
