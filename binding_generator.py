@@ -182,8 +182,38 @@ walk_fn(index.parse(h_path + 'reaper_plugin_functions.h', args='-x c++ -lc++ -st
 zig_fnPtrs.insert(0,'\tpub var __mergesort: *fn (base: ?*anyopaque,  nmemb: usize, size: usize, cmpfunc: ?*fn(*const anyopaque, *const anyopaque) callconv(.c) c_int, tmpspace: ?*anyopaque) callconv(.c) void = undefined;')
 zig_functions.insert(0,'pub fn __mergesort(base: ?*anyopaque,  nmemb: usize, size: usize, cmpfunc: ?*fn(*const anyopaque, *const anyopaque) c_int, tmpspace: ?*anyopaque) void {\n\treturn fnPtrs.__mergesort(base,  nmemb, size, cmpfunc, tmpspace);\n}')
 zig_functions.insert(0, '\n' + mergesort_comment)
+top_sting = """
+const std = @import("std");
+
+pub fn CString(size: usize) type {
+    return struct {
+        buf: [size]u8,
+
+        pub fn len(self: @This()) c_int {
+            return self.buf.len;
+        }
+
+        pub fn ptr(self: *@This()) [*:0]u8 {
+            return @ptrCast(&self.buf);
+        }
+
+        pub fn cptr(self: *const @This()) [*:0]const u8 {
+            return @ptrCast(&self.buf);
+        }
+
+        pub fn span(self: *@This()) @TypeOf(std.mem.span(self.ptr())) {
+            return std.mem.span(self.ptr());
+        }
+
+        pub fn cspan(self: *const @This()) @TypeOf(std.mem.span(self.cptr())) {
+            return std.mem.span(self.cptr());
+        }
+    };
+}
+
+"""
 #create final string
-zig_string = ('\n'.join(zig_opaques) + '\n' + '\npub const fnPtrs = struct {\n%s\n' % '\n'.join(zig_fnPtrs) + '};\n' + '\n'.join(zig_functions))
+zig_string = (top_sting + '\n'.join(zig_opaques) + '\n' + '\npub const fnPtrs = struct {\n%s\n' % '\n'.join(zig_fnPtrs) + '};\n' + '\n'.join(zig_functions))
 #write string to file
 with open(h_path + "reaper_functions.zig", "w") as text_file:
     #text_file.write('\n'.join(zig_functions))

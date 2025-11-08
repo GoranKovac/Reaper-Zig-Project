@@ -4,12 +4,11 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const lib = b.addSharedLibrary(.{
-        .name = "reaper_zig",
+    const lib = b.addLibrary(.{ .linkage = .dynamic, .name = "reaper_zig", .root_module = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
-    });
+    }) });
 
     const root = b.path("src/lib/csurf/");
     lib.addIncludePath(root);
@@ -25,3 +24,4 @@ pub fn build(b: *std.Build) void {
 
     // b.installArtifact(lib);
 }
+
